@@ -5,9 +5,6 @@ class Observation(BaseModel):
     zones: list
     time: int
 
-class Action(BaseModel):
-    actions: list
-
 class Reward(BaseModel):
     value: float
 
@@ -18,17 +15,20 @@ class OpenEnvWrapper:
 
     def reset(self):
         zones = self.env.reset(difficulty="medium")
-        return Observation(zones=zones, time=0)
+        return Observation(zones=zones, time=0).dict()
 
-    def step(self, action: Action):
-        zones, reward, done, _ = self.env.step(action["actions"])
+    def step(self, actions: list):  # ✅ FIXED
+        zones, reward, done, _ = self.env.step(actions)  # ✅ FIXED
 
         return (
-            Observation(zones=zones, time=self.env.time_elapsed),
-            Reward(value=reward),
+            Observation(zones=zones, time=self.env.time_elapsed).dict(),
+            float(reward),  # ✅ return float (IMPORTANT)
             done,
             {}
         )
 
     def state(self):
-        return Observation(zones=self.env.zones, time=self.env.time_elapsed)
+        return Observation(
+            zones=self.env.zones,
+            time=self.env.time_elapsed
+        ).dict()
