@@ -3,6 +3,7 @@ name = "disaster-openenv"
 version = "0.1.0"
 description = "Disaster Response OpenEnv Environment"
 authors = [{name = "Ashish"}]
+
 dependencies = [
     "fastapi",
     "uvicorn",
@@ -11,6 +12,9 @@ dependencies = [
     "pygame",
     "openenv"
 ]
+
+[project.scripts]
+server = "server.app:app"   # ✅ IMPORTANT
 
 [build-system]
 requires = ["setuptools", "wheel"]
