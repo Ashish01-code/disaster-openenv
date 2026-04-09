@@ -1,39 +1,40 @@
-from openenv_wrapper import OpenEnvWrapper
-from agent import SmartAgent
+# tasks.py
+from disaster_env import DisasterEnv
 
-def run_task(steps, difficulty):
-    env = OpenEnvWrapper()
-    agent = SmartAgent()
+# Helper to clamp score strictly between 0.01 and 0.99
+def normalize_score(score):
+    return max(0.01, min(0.99, score))
 
-    obs = env.reset()
-    env.env.reset(difficulty=difficulty)
+def run_task(difficulty):
+    """
+    Run the disaster environment with a simple policy
+    and return a raw score between 0 and 1.
+    """
+    env = DisasterEnv()
+    zones = env.reset(difficulty=difficulty)
+    
+    # Simple random/heuristic actions for demonstration
+    total_steps = 10
+    cumulative_reward = 0.0
 
-    total_rescued_start = sum(
-        z["people_trapped"] for row in env.env.zones for z in row
-    )
-
-    for _ in range(steps):
-        actions = agent.choose_actions(env.env.zones)
-        obs, reward, done, _ = env.step({"actions": actions})
-
+    for _ in range(total_steps):
+        # Example heuristic: dispatch based on remaining zones
+        actions = ["dispatch_team_high" if z > 0 else "wait" for z in zones]
+        zones, reward, done, _ = env.step(actions)
+        cumulative_reward += reward
         if done:
             break
 
-    total_rescued_end = sum(
-        z["people_trapped"] for row in env.env.zones for z in row
-    )
+    # Normalize reward to 0-1 range
+    raw_score = cumulative_reward / (total_steps * len(zones))
+    return normalize_score(raw_score)
 
-    rescued = total_rescued_start - total_rescued_end
-
-    score = rescued / total_rescued_start
-    return round(min(1.0, score), 2)
-
-
+# === Tasks ===
 def easy():
-    return run_task(10, "easy")
+    return run_task("easy")
 
 def medium():
-    return run_task(20, "medium")
+    return run_task("medium")
 
 def hard():
-    return run_task(30, "hard")
+    return run_task("hard")
