@@ -4,3 +4,4 @@ pygame
 openenv
 fastapi
 uvicorn
+openai
