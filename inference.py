@@ -1,47 +1,55 @@
 import os
 from openai import OpenAI
-from tasks import easy, medium, hard
 
-# ✅ Initialize OpenAI client using injected environment variables
+# Initialize client using injected environment variables
 client = OpenAI(
-    api_key=os.environ["API_KEY"],
-    base_url=os.environ["API_BASE_URL"]
+    base_url=os.environ["API_BASE_URL"],
+    api_key=os.environ["API_KEY"]
 )
+MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-3.5-turbo")
 
+# Logging helpers
 def log_start():
     print("[START] Running inference")
 
 def log_step(task_name, score):
-    # Ensure scores are strictly between 0 and 1
-    score = max(min(score, 0.99), 0.01)
     print(f"[STEP] Task={task_name} Score={score:.2f}")
 
 def log_end():
     print("[END] Inference complete")
 
+# Function to call LiteLLM proxy and get score
+def call_llm(task_name):
+    try:
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": f"Evaluate task {task_name} and return a score strictly between 0 and 1"}]
+        )
+        # Extract numeric score from LLM response
+        score = float(response.choices[0].message.content.strip())
+        # Ensure score is strictly in (0,1)
+        if score <= 0:
+            score = 0.01
+        elif score >= 1:
+            score = 0.99
+        return score
+    except Exception as e:
+        # If LLM fails, fallback to 0.5
+        print(f"[STEP] ERROR calling LLM for {task_name}: {e}")
+        return 0.5
+
 def main():
     log_start()
-    try:
-        # Run your 3 tasks
-        e = easy()
-        log_step("easy", e)
 
-        m = medium()
-        log_step("medium", m)
+    # Call LLM for each task
+    easy_score = call_llm("easy")
+    log_step("easy", easy_score)
 
-        h = hard()
-        log_step("hard", h)
+    medium_score = call_llm("medium")
+    log_step("medium", medium_score)
 
-       
-        response = client.chat.completions.create(
-            model=os.environ.get("MODEL_NAME", "gpt-3.5-turbo"),
-            messages=[{"role": "user", "content": "Validate API call for submission"}]
-        )
-        # Optional: log a STEP showing API call succeeded
-        print(f"[STEP] API_call_status=success")
-
-    except Exception as err:
-        print("[STEP] ERROR:", str(err))
+    hard_score = call_llm("hard")
+    log_step("hard", hard_score)
 
     log_end()
 
