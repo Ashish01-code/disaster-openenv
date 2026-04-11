@@ -1,4 +1,3 @@
-# tasks.py
 
 def easy():
     return 0.30
