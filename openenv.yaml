@@ -1,9 +1,20 @@
 name: disaster-response-env
 description: AI-based disaster response simulation with multi-agent coordination
 
-tasks:
-  - name: easy
-  - name: medium
-  - name: hard
-
 entry_point: openenv_wrapper:OpenEnvWrapper
+
+tasks:
+  - id: easy
+    name: easy
+    grader:
+      entry_point: tasks:easy
+
+  - id: medium
+    name: medium
+    grader:
+      entry_point: tasks:medium
+
+  - id: hard
+    name: hard
+    grader:
+      entry_point: tasks:hard
